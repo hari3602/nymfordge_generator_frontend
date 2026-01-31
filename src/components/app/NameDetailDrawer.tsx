@@ -2,15 +2,53 @@ import React from 'react';
 import { X, Check, ExternalLink, Copy, Crown, Sparkles } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import type { NameResult } from '../../App';
+import { NameDetailLoading } from './NameDetailLoading';
+
 
 type NameDetailDrawerProps = {
   name: NameResult | null;
   open: boolean;
+  loading: boolean;
   onClose: () => void;
 };
 
-export function NameDetailDrawer({ name, open, onClose }: NameDetailDrawerProps) {
+
+export function NameDetailDrawer({ name, open, loading, onClose }: NameDetailDrawerProps) {
+  if (!open) return null;
+
+  if (loading) {
+    return (
+      <AnimatePresence>
+        <>
+          {/* Backdrop */}
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            onClick={onClose}
+            className="fixed inset-0 bg-black/50 z-40"
+          />
+
+          {/* Drawer */}
+          <motion.div
+            initial={{ x: '100%' }}
+            animate={{ x: 0 }}
+            exit={{ x: '100%' }}
+            transition={{ type: 'spring', damping: 30, stiffness: 300 }}
+            className="fixed right-0 top-0 bottom-0 w-full md:w-[480px] bg-white shadow-2xl z-50 flex items-center justify-center"
+          >
+            <NameDetailLoading name={name?.name ?? ''} />
+            {/* <p className="text-gray-500 text-sm">Checking domain availability…</p> */}
+          </motion.div>
+        </>
+      </AnimatePresence>
+    );
+  }
+  
+  
   if (!name) return null;
+  
+  const socials = name.socials ?? [];
 
   const socialPlatforms = [
     { key: 'instagram', label: 'Instagram', url: 'instagram.com' },
@@ -18,7 +56,7 @@ export function NameDetailDrawer({ name, open, onClose }: NameDetailDrawerProps)
     { key: 'linkedin', label: 'LinkedIn', url: 'linkedin.com' },
     { key: 'tiktok', label: 'TikTok', url: 'tiktok.com' },
   ];
-
+  
   return (
     <AnimatePresence>
       {open && (
@@ -80,85 +118,82 @@ export function NameDetailDrawer({ name, open, onClose }: NameDetailDrawerProps)
               <div>
                 <h3 className="text-sm font-semibold text-gray-900 mb-3">Available Domains</h3>
                 <div className="space-y-2">
-                  {Object.entries(name.domains).map(([ext, available]) => (
-                    <div
-                      key={ext}
-                      className={`flex items-center justify-between p-4 rounded-lg border ${
-                        available
-                          ? 'bg-green-50 border-green-200'
-                          : 'bg-gray-50 border-gray-200'
-                      }`}
-                    >
-                      <div className="flex items-center space-x-3">
-                        <div
-                          className={`w-8 h-8 rounded-full flex items-center justify-center ${
-                            available ? 'bg-green-100' : 'bg-gray-100'
-                          }`}
-                        >
-                          {available ? (
-                            <Check className="w-4 h-4 text-green-600" />
-                          ) : (
-                            <X className="w-4 h-4 text-gray-400" />
-                          )}
-                        </div>
-                        <span className="font-medium text-gray-900">
-                          {name.name}.{ext}
-                        </span>
-                      </div>
-                      {available && (
+                  {!name.domains ? (
+                    <p className="text-sm text-gray-500">Checking domain availability…</p>
+                  ) : name.domains.length === 0 ? (
+                    <p className="text-sm text-gray-500">No domains available</p>
+                  ) : (
+                    name.domains.map((d) => (
+                      <div
+                        key={d.domain}
+                        className="flex items-center justify-between p-4 rounded-lg border bg-green-50 border-green-200"
+                      >
+                        <span className="font-medium text-gray-900">{d.domain}</span>
                         <button className="flex items-center space-x-1 text-sm text-slate-700 hover:text-slate-900">
                           <ExternalLink className="w-4 h-4" />
                           <span>Check</span>
                         </button>
-                      )}
-                    </div>
-                  ))}
+                      </div>
+                    ))
+                  )}
                 </div>
               </div>
 
+
               {/* Social Media Handles */}
+
               <div>
                 <h3 className="text-sm font-semibold text-gray-900 mb-3">Social Media Handles</h3>
                 <div className="space-y-2">
-                  {socialPlatforms.map((platform) => {
-                    const available = name.socials[platform.key as keyof typeof name.socials];
-                    return (
-                      <div
-                        key={platform.key}
-                        className={`flex items-center justify-between p-4 rounded-lg border ${
-                          available
-                            ? 'bg-green-50 border-green-200'
-                            : 'bg-gray-50 border-gray-200'
-                        }`}
-                      >
-                        <div className="flex items-center space-x-3">
-                          <div
-                            className={`w-8 h-8 rounded-full flex items-center justify-center ${
-                              available ? 'bg-green-100' : 'bg-gray-100'
-                            }`}
-                          >
-                            {available ? (
-                              <Check className="w-4 h-4 text-green-600" />
-                            ) : (
-                              <X className="w-4 h-4 text-gray-400" />
-                            )}
+                  {socials.length === 0 ? (
+                    <p className="text-sm text-gray-500">Checking social handles…</p>
+                  ) : (
+                    socialPlatforms.map((platform) => {
+                      const social = socials.find(s => s.platform === platform.key);
+                      const available = social?.available;
+
+                      return (
+                        <div
+                          key={platform.key}
+                          className={`flex items-center justify-between p-4 rounded-lg border ${
+                            available
+                              ? 'bg-green-50 border-green-200'
+                              : 'bg-gray-50 border-gray-200'
+                          }`}
+                        >
+                          <div className="flex items-center space-x-3">
+                            <div
+                              className={`w-8 h-8 rounded-full flex items-center justify-center ${
+                                available ? 'bg-green-100' : 'bg-gray-100'
+                              }`}
+                            >
+                              {available ? (
+                                <Check className="w-4 h-4 text-green-600" />
+                              ) : (
+                                <X className="w-4 h-4 text-gray-400" />
+                              )}
+                            </div>
+                            <div>
+                              <p className="font-medium text-gray-900">{platform.label}</p>
+                              <p className="text-sm text-gray-500">
+                                {social?.handle ?? 'Not available'}
+                              </p>
+                            </div>
                           </div>
-                          <div>
-                            <p className="font-medium text-gray-900">{platform.label}</p>
-                            <p className="text-sm text-gray-500">@{name.name.toLowerCase()}</p>
-                          </div>
+                          {available && (
+                            <button className="flex items-center space-x-1 text-sm text-slate-700 hover:text-slate-900">
+                              <ExternalLink className="w-4 h-4" />
+                              <span>View</span>
+                            </button>
+                          )}
                         </div>
-                        {available && (
-                          <button className="flex items-center space-x-1 text-sm text-slate-700 hover:text-slate-900">
-                            <ExternalLink className="w-4 h-4" />
-                            <span>View</span>
-                          </button>
-                        )}
-                      </div>
-                    );
-                  })}
+                      );
+                    })
+                  )}
                 </div>
               </div>
+
+
 
               {/* Logo Recommendation */}
               <div className="bg-slate-50 rounded-xl p-6 border border-slate-100">
