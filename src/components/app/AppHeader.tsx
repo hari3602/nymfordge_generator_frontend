@@ -1,11 +1,34 @@
 import React from 'react';
 import { Sparkles, History, CreditCard, User } from 'lucide-react';
 
-export function AppHeader() {
+type AppHeaderProps = {
+  view: 'generator' | 'history';
+  onChangeView: (view: 'generator' | 'history') => void;
+};
+
+
+export function AppHeader({ view, onChangeView }: AppHeaderProps) {
   const navItems = [
-    { icon: Sparkles, label: 'Generator', active: true },
-    { icon: History, label: 'History', active: false },
-    { icon: CreditCard, label: 'Pricing', active: false },
+      {
+        icon: Sparkles,
+        label: 'Generator',
+        view: 'generator' as const,
+        type: 'internal'  as const,
+      },
+      {
+        icon: History,
+        label: 'History',
+        view: 'history' as const,
+        type: 'internal'  as const,
+      },
+      {
+        icon: CreditCard,
+        label: 'Pricing',
+        href: 'https://yourdomain.com/pricing',
+        type: 'external'  as const,
+      },
+    
+
   ];
 
   return (
@@ -23,19 +46,40 @@ export function AppHeader() {
 
             {/* Navigation */}
             <nav className="hidden md:flex items-center space-x-1">
-              {navItems.map((item) => (
-                <button
-                  key={item.label}
-                  className={`flex items-center space-x-2 px-4 py-2 rounded-lg transition-colors ${
-                    item.active
-                      ? 'bg-slate-100 text-slate-900'
-                      : 'text-gray-600 hover:bg-gray-100'
-                  }`}
-                >
-                  <item.icon className="w-4 h-4" />
-                  <span className="text-sm">{item.label}</span>
-                </button>
-              ))}
+              {navItems.map((item) => {
+                const isActive =
+                  item.type === 'internal' && item.view === view;
+
+                if (item.type === 'external') {
+                  return (
+                    <a
+                      key={item.label}
+                      href={item.href}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="flex items-center space-x-2 px-4 py-2 rounded-lg text-gray-600 hover:bg-gray-100 transition-colors"
+                    >
+                      <item.icon className="w-4 h-4" />
+                      <span className="text-sm">{item.label}</span>
+                    </a>
+                  );
+                }
+
+                return (
+                  <button
+                    key={item.label}
+                    onClick={() => onChangeView(item.view)}
+                    className={`flex items-center space-x-2 px-4 py-2 rounded-lg transition-colors ${
+                      isActive
+                        ? 'bg-slate-100 text-slate-900'
+                        : 'text-gray-600 hover:bg-gray-100'
+                    }`}
+                  >
+                    <item.icon className="w-4 h-4" />
+                    <span className="text-sm">{item.label}</span>
+                  </button>
+                );
+              })}
             </nav>
           </div>
 
